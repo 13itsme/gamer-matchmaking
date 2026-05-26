@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Виртуальное окружение
+venv/
+.venv/
+
+# Переменные окружения
+.env
+
+# Загрузки пользователей
+app/static/uploads/avatars/*
+!app/static/uploads/avatars/.gitkeep
+
+# Миграции (версии оставляем)
+# migrations/versions/ — не игнорируем
+
+# PyCharm
+.idea/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+
+# Логи
+*.log
+logs/
+
+# База данных
+*.db
+*.sqlite3
