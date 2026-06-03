@@ -83,3 +83,24 @@ def unread_count():
         is_read=False
     ).count()
     return jsonify({"unread_count": count})
+
+
+@chat_bp.route("/")
+@login_required
+def chats_list():
+    from app.models.invitation import Invitation
+    current_user = get_current_user()
+
+    active_chats = Invitation.query.filter(
+        Invitation.status == "accepted",
+        (
+            (Invitation.sender_id == current_user.id) |
+            (Invitation.receiver_id == current_user.id)
+        )
+    ).order_by(Invitation.updated_at.desc()).all()
+
+    return render_template(
+        "chat/chats_list.html",
+        active_chats=active_chats,
+        current_user=current_user
+    )

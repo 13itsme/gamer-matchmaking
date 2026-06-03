@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="auth-page" style="align-items: flex-start; padding-top: 2rem;">
+  <div class="auth-card" style="max-width: 520px;">
+    <div class="auth-card__title">Create account 🎮</div>
+    <div class="auth-card__subtitle">Join GameMatch and find your perfect teammate</div>
+
+    <form method="POST" action="{{ url_for('auth.register') }}">
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Nickname *</label>
+          <input type="text" name="nickname" class="form-control"
+                 placeholder="CoolGamer99" required minlength="3" maxlength="50"
+                 value="{{ form_data.nickname if form_data else '' }}">
+          <span class="form-hint">Letters, numbers, _ and - only</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Age</label>
+          <input type="number" name="age" class="form-control"
+                 placeholder="18" min="13" max="120"
+                 value="{{ form_data.age if form_data else '' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input type="email" name="email" class="form-control"
+               placeholder="your@email.com" required
+               value="{{ form_data.email if form_data else '' }}">
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Password *</label>
+          <input type="password" name="password" class="form-control"
+                 placeholder="Min. 8 characters" required minlength="8">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm password *</label>
+          <input type="password" name="confirm_password" class="form-control"
+                 placeholder="Repeat password" required>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Real name</label>
+          <input type="text" name="real_name" class="form-control"
+                 placeholder="Optional"
+                 value="{{ form_data.real_name if form_data else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Discord ID</label>
+          <input type="text" name="discord_id" class="form-control"
+                 placeholder="username#0000"
+                 value="{{ form_data.discord_id if form_data else '' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Preferred language</label>
+        <select name="preferred_language" class="form-control">
+          <option value="EN" {% if not form_data or form_data.preferred_language == 'EN' %}selected{% endif %}>English</option>
+          <option value="PL" {% if form_data and form_data.preferred_language == 'PL' %}selected{% endif %}>Polski</option>
+          <option value="RU" {% if form_data and form_data.preferred_language == 'RU' %}selected{% endif %}>Русский</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-check">
+          <input type="checkbox" name="rodo_consent" required>
+          <span style="font-size:0.85rem; color:var(--text-secondary);">
+            I agree to the processing of my personal data (GDPR). I can delete my account at any time.
+          </span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg">
+        Create account
+      </button>
+    </form>
+
+    <div class="auth-card__footer">
+      Already have an account? <a href="{{ url_for('auth.login') }}">Login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

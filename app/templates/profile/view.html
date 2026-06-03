@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.nickname }}{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+
+    <!-- Шапка профиля -->
+    <div class="profile-header">
+        <div class="profile-avatar-wrap">
+            <img src="{{ profile.avatar_url or '/static/uploads/avatars/default.png' }}"
+                 alt="avatar" class="profile-avatar"
+                 onerror="this.src='/static/uploads/avatars/default.png'">
+            {% if profile.is_online %}
+            <div class="profile-online-badge"></div>
+            {% endif %}
+        </div>
+
+        <div style="flex:1; min-width:0;">
+            <div class="profile-name">
+                {{ profile.nickname }}
+                {% if profile.is_online %}
+                <span class="tag tag--purple" style="font-size:0.7rem; vertical-align:middle;">● Online</span>
+                {% else %}
+                <span class="tag" style="font-size:0.7rem; vertical-align:middle;">Offline</span>
+                {% endif %}
+            </div>
+
+            {% if profile.bio %}
+            <div class="profile-bio">{{ profile.bio }}</div>
+            {% endif %}
+
+            <div class="profile-meta">
+                <span class="profile-meta-item">🌐 {{ profile.preferred_language }}</span>
+                {% if user.discord_id %}
+                <span class="profile-meta-item">💬 {{ user.discord_id }}</span>
+                {% endif %}
+                <span class="profile-meta-item">📅 Joined {{ user.registration_date.strftime('%B %Y') }}</span>
+
+                <!-- Trust score -->
+                {% if trust_score and trust_score.is_visible() %}
+                {% set color = trust_score.get_dominant_color() %}
+                <span class="trust-badge trust-badge--{{ color }}">
+            ⭐ {{ "%.1f"|format(trust_score.average_stars) }}
+            ({{ trust_score.total_ratings }} ratings)
+          </span>
+                {% elif trust_score %}
+                <span class="trust-badge trust-badge--unknown">
+            No ratings yet
+          </span>
+                {% endif %}
+            </div>
+
+            <!-- Игры пользователя -->
+            {% if user_games %}
+            <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.75rem;">
+                {% for ug in user_games %}
+                <div style="display:flex;align-items:center;gap:0.4rem;">
+                    <span class="tag tag--purple">{{ ug.game.name }}</span>
+                    <span class="tag">{{ ug.region }}</span>
+                    <span class="tag tag--blue">{{ ug.game_mode }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Кнопки действий -->
+        <div style="display:flex; flex-direction:column; gap:0.5rem; flex-shrink:0;">
+            {% if current_user and current_user.id != user.id %}
+            <button class="btn btn-primary btn-sm" onclick="openInviteModal({{ user.id }})">
+                ✉️ Send invite
+            </button>
+            {% if can_rate %}
+            <button class="btn btn-ghost btn-sm" onclick="openRatingModal({{ user.id }})">
+                ⭐ Rate player
+            </button>
+            {% endif %}
+            {% elif not current_user %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-sm">Login to invite</a>
+            {% else %}
+            <a href="{{ url_for('profile.edit') }}" class="btn btn-secondary btn-sm">✏️ Edit profile</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Рейтинги -->
+    {% if trust_score and trust_score.is_visible() %}
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;">
+        <h3 style="font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:600;margin-bottom:1rem;">⭐ Trust
+            ratings</h3>
+        <div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
+            <div style="text-align:center;">
+                <div style="font-size:2rem;font-weight:700;color:var(--accent-purple);">{{
+                    "%.1f"|format(trust_score.average_stars) }}
+                </div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Average</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--green);">{{ trust_score.green_count }}</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Positive</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--orange);">{{ trust_score.orange_count }}</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Neutral</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--red);">{{ trust_score.red_count }}</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Negative</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Модалка приглашения -->
+{% if current_user and current_user.id != user.id %}
+<div id="invite-modal"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:center; justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:440px;margin:1rem;">
+        <h3 style="font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:600;margin-bottom:1.5rem;">
+            Send invite to {{ profile.nickname }}
+        </h3>
+        <form method="POST" action="{{ url_for('invitations.send') }}">
+            <input type="hidden" name="receiver_id" value="{{ user.id }}">
+            <div class="form-group">
+                <label class="form-label">Game</label>
+                <select name="game_id" class="form-control" required>
+                    {% for ug in user_games %}
+                    <option value="{{ ug.game_id }}">{{ ug.game.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Message (optional)</label>
+                <textarea name="message" class="form-control" placeholder="Hey! Want to play together?"
+                          maxlength="500"></textarea>
+            </div>
+            <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1rem;">
+                <button type="button" class="btn btn-ghost" onclick="closeInviteModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Send invite</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Модалка рейтинга -->
+<div id="rating-modal"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:center; justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:400px;margin:1rem;">
+        <h3 style="font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:600;margin-bottom:1.5rem;">
+            Rate {{ profile.nickname }}
+        </h3>
+        <div style="display:flex; gap:0.75rem; margin-bottom:1.5rem;">
+            <button class="btn btn-block star-btn" data-stars="3" onclick="selectStars(3)"
+                    style="background:rgba(76,175,125,0.15);border:1px solid var(--green);color:var(--green);">
+                ⭐ Positive
+            </button>
+            <button class="btn btn-block star-btn" data-stars="2" onclick="selectStars(2)"
+                    style="background:rgba(232,164,74,0.15);border:1px solid var(--orange);color:var(--orange);">
+                ⭐ Neutral
+            </button>
+            <button class="btn btn-block star-btn" data-stars="1" onclick="selectStars(1)"
+                    style="background:rgba(224,92,92,0.15);border:1px solid var(--red);color:var(--red);">
+                ⭐ Negative
+            </button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Comment (optional)</label>
+            <textarea id="rating-comment" class="form-control" placeholder="Your experience with this player..."
+                      maxlength="500"></textarea>
+        </div>
+        <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1rem;">
+            <button type="button" class="btn btn-ghost" onclick="closeRatingModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="submitRating({{ user.id }})">Submit rating</button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedStars = 0;
+
+    function openInviteModal() {
+      document.getElementById('invite-modal').style.display = 'flex';
+    }
+    function closeInviteModal() {
+      document.getElementById('invite-modal').style.display = 'none';
+    }
+    function openRatingModal() {
+      document.getElementById('rating-modal').style.display = 'flex';
+    }
+    function closeRatingModal() {
+      document.getElementById('rating-modal').style.display = 'none';
+    }
+    function selectStars(stars) {
+      selectedStars = stars;
+      document.querySelectorAll('.star-btn').forEach(btn => {
+        btn.style.opacity = btn.dataset.stars == stars ? '1' : '0.4';
+      });
+    }
+    async function submitRating(userId) {
+      if (!selectedStars) { alert('Please select a rating'); return; }
+      const comment = document.getElementById('rating-comment').value;
+      const res = await fetch('/ratings/rate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, stars: selectedStars, comment })
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeRatingModal();
+        location.reload();
+      }
+    }
+
+    // Закрыть по клику вне модалки
+    document.getElementById('invite-modal')?.addEventListener('click', function(e) {
+      if (e.target === this) closeInviteModal();
+    });
+    document.getElementById('rating-modal')?.addEventListener('click', function(e) {
+      if (e.target === this) closeRatingModal();
+    });
+</script>
+{% endblock %}

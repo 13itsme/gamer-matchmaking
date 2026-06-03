@@ -112,6 +112,7 @@ def login():
     session.permanent = True
     session["user_id"] = user.id
     session["nickname"] = user.profile.nickname if user.profile else "Gamer"
+    session["avatar_url"] = user.profile.avatar_url or "/static/uploads/avatars/default.png"
 
     if user.profile:
         user.profile.is_online = True

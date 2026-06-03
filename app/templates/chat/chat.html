@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Chat with {{ partner_profile.nickname }}{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+
+  <div class="chat-header">
+    <a href="{{ url_for('invitations.list_invitations') }}"
+       style="color:var(--text-muted);font-size:1.2rem;text-decoration:none;">←</a>
+    <img src="{{ partner_profile.avatar_url or '/static/uploads/avatars/default.png' }}"
+         alt="avatar"
+         style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid {% if partner_profile.is_online %}var(--green){% else %}var(--border){% endif %};"
+         onerror="this.src='/static/uploads/avatars/default.png'">
+    <div>
+      <div style="font-weight:600;font-size:0.95rem;">
+        <a href="{{ url_for('profile.view', nickname=partner_profile.nickname) }}"
+           style="color:var(--text-primary);">
+          {{ partner_profile.nickname }}
+        </a>
+      </div>
+      <div style="font-size:0.75rem;color:{% if partner_profile.is_online %}var(--green){% else %}var(--text-muted){% endif %};">
+        {% if partner_profile.is_online %}● Online{% else %}Offline{% endif %}
+      </div>
+    </div>
+    <div id="typing-indicator" style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);display:none;">
+      typing...
+    </div>
+  </div>
+
+  <div class="chat-messages" id="chat-messages">
+    {% if messages %}
+      {% for msg in messages %}
+      <div class="chat-message {% if msg.sender_id == current_user.id %}chat-message--own{% endif %}"
+           id="msg-{{ msg.id }}">
+        {% if msg.sender_id != current_user.id %}
+        <img src="{{ partner_profile.avatar_url or '/static/uploads/avatars/default.png' }}"
+             alt="avatar"
+             style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;"
+             onerror="this.src='/static/uploads/avatars/default.png'">
+        {% endif %}
+        <div>
+          <div class="chat-bubble">{{ msg.content }}</div>
+          <div class="chat-bubble__time">{{ msg.created_at.strftime('%H:%M') }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state__icon">💬</div>
+      <div class="empty-state__title">Start the conversation!</div>
+      <div class="empty-state__text">Say hi to {{ partner_profile.nickname }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="chat-input-area">
+    <textarea class="chat-input" id="chat-input"
+              placeholder="Type a message..."
+              rows="1"
+              onkeydown="handleKey(event)"
+              oninput="handleTyping()"></textarea>
+    <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+<script>
+  initChat({{ partner.id }}, {{ current_user.id }});
+</script>
+{% endblock %}

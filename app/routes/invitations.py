@@ -27,6 +27,15 @@ def list_invitations():
         .all()
     )
 
+    active_chats = Invitation.query.filter(
+        Invitation.status == "accepted",
+        (
+                (Invitation.sender_id == current_user.id) |
+                (Invitation.receiver_id == current_user.id)
+        )
+    ).order_by(Invitation.updated_at.desc()).all()
+
+
     return render_template(
         "invitations/list.html",
         incoming=incoming,

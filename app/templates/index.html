@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <h1 class="hero__title">
+            Find your<br>
+            <span>gaming partner</span>
+        </h1>
+        <p class="hero__subtitle">
+            Register, choose a game, filter by region and playstyle — and start playing with people who are just right
+            for you.
+        </p>
+        <div class="hero__actions">
+            {% if not session.user_id %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Get Started</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-lg">Login</a>
+            {% else %}
+            <p style="color: var(--text-secondary); font-size:1rem;">
+                Welcome, <strong style="color:var(--accent-purple)">{{ session.nickname }}</strong>! Pick a game below
+                👇
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<div class="container page-content">
+    <h2 class="section-title">🎮 Game Categories</h2>
+
+    <div style="display:grid; grid-template-columns: {% if session.user_id %}1fr 280px{% else %}1fr{% endif %}; gap:1.5rem; align-items:start;">
+
+        <!-- Левая часть - карточки игр -->
+        <div>
+            {% if games %}
+            <div class="games-grid">
+                {% for game in games %}
+                <a href="{{ url_for('games.category', game_id=game.id) }}" class="game-card">
+                    <div class="game-card__icon">
+                        {% if game.icon_url %}
+                        <img src="{{ game.icon_url }}" alt="{{ game.name }}"
+                             style="width:40px;height:40px;object-fit:contain;">
+                        {% else %}
+                        🎮
+                        {% endif %}
+                    </div>
+                    <div class="game-card__name">{{ game.name }}</div>
+                    <div class="game-card__stats">
+                        <div class="game-card__stat">
+                            <span class="online-dot"></span>
+                            <strong>{{ game_stats[game.id]['online'] }}</strong> online
+                        </div>
+                        <div class="game-card__stat">
+                            👥 <strong>{{ game_stats[game.id]['total'] }}</strong> players
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state__icon">🎮</div>
+                <div class="empty-state__title">No games added yet</div>
+            </div>
+            {% endif %}
+
+            {% if not session.user_id %}
+            <div class="divider"></div>
+            <h2 class="section-title">⚙️ How it works</h2>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:2rem;">
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;">
+                    <div style="font-size:1.75rem;margin-bottom:0.75rem;">1️⃣</div>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:600;margin-bottom:0.4rem;">
+                        Register
+                    </div>
+                    <div style="color:var(--text-muted);font-size:0.85rem;">Create a profile, add your games and Discord
+                        ID
+                    </div>
+                </div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;">
+                    <div style="font-size:1.75rem;margin-bottom:0.75rem;">2️⃣</div>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:600;margin-bottom:0.4rem;">
+                        Find a player
+                    </div>
+                    <div style="color:var(--text-muted);font-size:0.85rem;">Filter by region, language and game mode
+                    </div>
+                </div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;">
+                    <div style="font-size:1.75rem;margin-bottom:0.75rem;">3️⃣</div>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:600;margin-bottom:0.4rem;">
+                        Send an invite
+                    </div>
+                    <div style="color:var(--text-muted);font-size:0.85rem;">Write a message and wait for a reply</div>
+                </div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;">
+                    <div style="font-size:1.75rem;margin-bottom:0.75rem;">4️⃣</div>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:600;margin-bottom:0.4rem;">
+                        Play & rate
+                    </div>
+                    <div style="color:var(--text-muted);font-size:0.85rem;">After the game leave a trust rating 1-3 ⭐
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Правая панель (только для залогиненных) -->
+        {% if session.user_id %}
+        <div style="display:flex;flex-direction:column;gap:1rem;position:sticky;top:80px;">
+
+            <!-- Quick Actions -->
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;">
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600;margin-bottom:1rem;color:var(--text-muted);letter-spacing:0.05em;">
+                    QUICK ACTIONS
+                </div>
+                <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                    <a href="{{ url_for('invitations.list_invitations') }}" class="btn btn-secondary btn-block btn-sm"
+                       style="justify-content:flex-start;">
+                        ✉️ Invitations
+                    </a>
+                    <a href="{{ url_for('chat.chats_list') }}" class="btn btn-secondary btn-block btn-sm"
+                       style="justify-content:flex-start;">
+                        💬 My Chats
+                    </a>
+                    <a href="{{ url_for('profile.me') }}" class="btn btn-secondary btn-block btn-sm"
+                       style="justify-content:flex-start;">
+                        👤 My Profile
+                    </a>
+                    <a href="{{ url_for('profile.edit') }}" class="btn btn-secondary btn-block btn-sm"
+                       style="justify-content:flex-start;">
+                        ✏️ Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- My Games -->
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;">
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600;margin-bottom:1rem;color:var(--text-muted);letter-spacing:0.05em;">
+                    MY GAMES
+                </div>
+                {% if current_user %}
+                {% set user_games = current_user.user_games.all() %}
+                {% if user_games %}
+                {% for ug in user_games %}
+                <a href="{{ url_for('games.category', game_id=ug.game_id) }}"
+                   style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.4rem;border-radius:var(--radius-sm);color:var(--text-secondary);font-size:0.85rem;transition:background 0.2s;text-decoration:none;">
+                    🎮 {{ ug.game.name }}
+                    <span style="margin-left:auto;font-size:0.7rem;color:var(--text-muted);">{{ ug.region }}</span>
+                </a>
+                {% endfor %}
+                {% else %}
+                <div style="font-size:0.82rem;color:var(--text-muted);">
+                    No games yet — <a href="{{ url_for('profile.edit') }}">add some</a>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+
+            <!-- Online status -->
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;">
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:600;margin-bottom:0.75rem;color:var(--text-muted);letter-spacing:0.05em;">
+                    YOUR STATUS
+                </div>
+                <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.875rem;">
+                    <span class="online-dot"></span>
+                    <span style="color:var(--green);">Online</span>
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

@@ -31,9 +31,21 @@ def create_app():
         engineio_logger=app.config["DEBUG"]
     )
 
-    """
-     ***
-     Here i'll add all routes 
-     ***
-    """
+    from app.routes.auth import auth_bp
+    from app.routes.profile import profile_bp
+    from app.routes.games import games_bp
+    from app.routes.invitations import invitations_bp
+    from app.routes.chat import chat_bp
+    from app.routes.ratings import ratings_bp
+
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(profile_bp)
+    app.register_blueprint(games_bp)
+    app.register_blueprint(invitations_bp)
+    app.register_blueprint(chat_bp)
+    app.register_blueprint(ratings_bp)
+
+    from app.sockets import events
+    from app.models import user, profile, game, user_game, invitation, message, trust_rating, trust_score
+
     return app

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Invitations{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+  <div class="page-header">
+    <div class="page-header__title">✉️ Invitations</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+
+    <!-- Входящие -->
+    <div>
+      <h3 style="font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:600;margin-bottom:1rem;">
+        📥 Incoming
+        {% if incoming %}<span class="badge">{{ incoming|length }}</span>{% endif %}
+      </h3>
+
+      {% if incoming %}
+        {% for inv in incoming %}
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:0.75rem;">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+            <div style="flex:1;">
+              <div style="font-weight:600;">
+                <a href="{{ url_for('profile.view', nickname=inv.sender.profile.nickname) }}">
+                  {{ inv.sender.profile.nickname }}
+                </a>
+              </div>
+              <div style="font-size:0.8rem;color:var(--text-muted);">
+                🎮 {{ inv.game.name }} · {{ inv.created_at.strftime('%d %b %Y') }}
+              </div>
+            </div>
+          </div>
+          {% if inv.message %}
+          <div style="background:var(--bg-elevated);border-radius:var(--radius-sm);padding:0.6rem 0.9rem;font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.75rem;">
+            "{{ inv.message }}"
+          </div>
+          {% endif %}
+          <div style="display:flex;gap:0.5rem;">
+            <button class="btn btn-primary btn-sm" style="flex:1;" onclick="respondInvite({{ inv.id }}, 'accept')">
+              ✓ Accept
+            </button>
+            <button class="btn btn-danger btn-sm" style="flex:1;" onclick="respondInvite({{ inv.id }}, 'reject')">
+              ✕ Decline
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state" style="padding:2rem;">
+        <div class="empty-state__icon">📭</div>
+        <div class="empty-state__title">No incoming invitations</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Исходящие -->
+    <div>
+      <h3 style="font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:600;margin-bottom:1rem;">
+        📤 Sent
+      </h3>
+
+      {% if outgoing %}
+        {% for inv in outgoing %}
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:0.75rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-weight:600;">
+                <a href="{{ url_for('profile.view', nickname=inv.receiver.profile.nickname) }}">
+                  {{ inv.receiver.profile.nickname }}
+                </a>
+              </div>
+              <div style="font-size:0.8rem;color:var(--text-muted);">
+                🎮 {{ inv.game.name }} · {{ inv.created_at.strftime('%d %b %Y') }}
+              </div>
+            </div>
+            <span style="font-size:0.8rem;padding:0.25rem 0.6rem;border-radius:100px;
+              {% if inv.status == 'accepted' %}background:rgba(76,175,125,0.15);color:var(--green);
+              {% elif inv.status == 'rejected' %}background:rgba(224,92,92,0.15);color:var(--red);
+              {% else %}background:var(--bg-elevated);color:var(--text-muted);{% endif %}">
+              {% if inv.status == 'accepted' %}✓ Accepted
+              {% elif inv.status == 'rejected' %}✕ Declined
+              {% else %}⏳ Pending{% endif %}
+            </span>
+          </div>
+          {% if inv.status == 'accepted' %}
+          <div style="margin-top:0.75rem;">
+            <a href="{{ url_for('chat.chat_view', partner_id=inv.receiver_id) }}"
+               class="btn btn-primary btn-sm btn-block">
+              💬 Open chat
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state" style="padding:2rem;">
+        <div class="empty-state__icon">📤</div>
+        <div class="empty-state__title">No sent invitations</div>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function respondInvite(id, action) {
+  const res = await fetch(`/invitations/${id}/${action}`, { method: 'POST' });
+  const data = await res.json();
+  if (data.success) {
+    if (action === 'accept' && data.chat_url) {
+      window.location.href = data.chat_url;
+    } else {
+      location.reload();
+    }
+  }
+}
+</script>
+{% endblock %}

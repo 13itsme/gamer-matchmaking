@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}{{ game.name }}{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+
+  <div class="page-header">
+    <div class="page-header__title">
+      {% if game.name == 'CS2' %}💣
+      {% elif game.name == 'Dota 2' %}🛡️
+      {% elif game.name == 'Apex Legends' %}🎯
+      {% elif game.name == 'Discord Hangout' %}💬
+      {% else %}🎮{% endif %}
+      {{ game.name }}
+    </div>
+    <div class="page-header__subtitle">Find players for {{ game.name }}</div>
+  </div>
+
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label class="filter-label">Region</label>
+      <select class="form-control" id="filter-region" onchange="loadPlayers()">
+        <option value="">All regions</option>
+        {% for r in regions %}
+        <option value="{{ r }}">{{ region_labels[r] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Language</label>
+      <select class="form-control" id="filter-language" onchange="loadPlayers()">
+        <option value="">All languages</option>
+        {% for code, name in languages %}
+        <option value="{{ code }}">{{ name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Game mode</label>
+      <select class="form-control" id="filter-mode" onchange="loadPlayers()">
+        <option value="">All modes</option>
+        {% for m in game_modes %}
+        <option value="{{ m }}">{{ game_mode_labels[m] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Min trust</label>
+      <select class="form-control" id="filter-trust" onchange="loadPlayers()">
+        <option value="0">Any</option>
+        <option value="2">2+</option>
+        <option value="2.5">2.5+</option>
+        <option value="3">3 only</option>
+      </select>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="resetFilters()">Reset</button>
+  </div>
+
+  <div id="players-container">
+    <div class="empty-state">
+      <div class="empty-state__icon">⏳</div>
+      <div class="empty-state__title">Loading players...</div>
+    </div>
+  </div>
+
+  <div id="pagination" style="display:flex;justify-content:center;gap:0.5rem;margin-top:2rem;"></div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const GAME_ID = {{ game.id }};
+let currentPage = 1;
+
+async function loadPlayers(page = 1) {
+  currentPage = page;
+  const region   = document.getElementById('filter-region').value;
+  const language = document.getElementById('filter-language').value;
+  const mode     = document.getElementById('filter-mode').value;
+  const trust    = document.getElementById('filter-trust').value;
+
+  const params = new URLSearchParams({
+    game_id: GAME_ID, page,
+    ...(region   && { region }),
+    ...(language && { language }),
+    ...(mode     && { game_mode: mode }),
+    ...(trust    && trust > 0 && { min_trust: trust }),
+  });
+
+  const container = document.getElementById('players-container');
+  container.innerHTML = '<div class="empty-state"><div class="empty-state__icon">⏳</div><div class="empty-state__title">Loading...</div></div>';
+
+  try {
+    const res  = await fetch(`/api/players?${params}`);
+    const data = await res.json();
+    renderPlayers(data);
+    renderPagination(data);
+  } catch(e) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state__icon">❌</div><div class="empty-state__title">Error loading players</div></div>';
+  }
+}
+
+function renderPlayers(data) {
+  const container = document.getElementById('players-container');
+  if (!data.players.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state__icon">🔍</div><div class="empty-state__title">No players found</div><div class="empty-state__text">Try changing the filters</div></div>';
+    return;
+  }
+
+  container.innerHTML = `<div class="players-grid">${data.players.map(p => `
+    <div class="player-card">
+      <div class="player-card__header">
+        <img src="${p.avatar_url}" alt="avatar"
+             class="player-avatar ${p.is_online ? 'player-avatar--online' : ''}"
+             onerror="this.src='/static/uploads/avatars/default.png'">
+        <div class="player-card__info">
+          <div class="player-card__nickname">${p.nickname}</div>
+          <div class="player-card__meta">
+            ${p.is_online ? '<span class="online-dot"></span> Online' : 'Offline'}
+            · ${p.preferred_language}
+          </div>
+        </div>
+        ${p.trust_score && p.trust_score.is_visible ? `
+          <span class="trust-badge trust-badge--${p.trust_score.dominant_color}">
+            ⭐ ${p.trust_score.average_stars}
+          </span>` : ''}
+      </div>
+      ${p.bio ? `<div class="player-card__bio">${p.bio}</div>` : ''}
+      <div class="player-card__tags">
+        <span class="tag tag--purple">${p.region_label}</span>
+        <span class="tag tag--blue">${p.game_mode_label}</span>
+        ${p.discord_id ? `<span class="tag">💬 ${p.discord_id}</span>` : ''}
+      </div>
+      <div class="player-card__actions">
+        <a href="/profile/${p.nickname}" class="btn btn-ghost btn-sm" style="flex:1;">View profile</a>
+        <button class="btn btn-primary btn-sm" style="flex:1;"
+                id="invite-btn-${p.user_id}"
+                onclick="sendInvite(event, ${p.user_id}, ${GAME_ID})">
+          ✉️ Invite
+        </button>
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
+function renderPagination(data) {
+  const el = document.getElementById('pagination');
+  if (data.pages <= 1) { el.innerHTML = ''; return; }
+  el.innerHTML = Array.from({length: data.pages}, (_, i) => i + 1).map(p => `
+    <button class="btn ${p === currentPage ? 'btn-primary' : 'btn-ghost'} btn-sm"
+            onclick="loadPlayers(${p})">${p}</button>
+  `).join('');
+}
+
+async function sendInvite(event, receiverId, gameId) {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  const res = await fetch('/invitations/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `receiver_id=${receiverId}&game_id=${gameId}`,
+  });
+  const data = await res.json();
+
+  if (data.success) {
+    btn.textContent = '✓ Sent';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-secondary');
+  } else if (res.status === 409) {
+    btn.textContent = '✓ Already sent';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-secondary');
+  } else {
+    btn.disabled = false;
+    btn.textContent = '✉️ Invite';
+    alert(data.error || 'Error sending invite');
+  }
+}
+
+function resetFilters() {
+  ['filter-region','filter-language','filter-mode','filter-trust'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('filter-trust').value = '0';
+  loadPlayers();
+}
+
+loadPlayers();
+</script>
+{% endblock %}

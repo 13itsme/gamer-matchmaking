@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+  <div class="page-header">
+    <div class="page-header__title">✏️ Edit Profile</div>
+    <div class="page-header__subtitle">Update your public profile information</div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 340px; gap:1.5rem; align-items:start;">
+
+    <!-- Основная форма -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;">
+      <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="update_profile">
+
+        <!-- Аватар -->
+        <div style="display:flex; align-items:center; gap:1.5rem; margin-bottom:1.75rem;">
+          <img src="{{ profile.avatar_url or '/static/uploads/avatars/default.png' }}"
+               alt="avatar" id="avatar-preview"
+               style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--accent-purple);"
+               onerror="this.src='/static/uploads/avatars/default.png'">
+          <div>
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
+              📷 Change avatar
+              <input type="file" name="avatar" accept="image/*" style="display:none;" onchange="previewAvatar(this)">
+            </label>
+            <div class="form-hint" style="margin-top:0.4rem;">PNG, JPG, GIF, WebP — max 2MB</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label class="form-label">Nickname *</label>
+            <input type="text" name="nickname" class="form-control"
+                   value="{{ profile.nickname }}" required minlength="3" maxlength="50">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred language</label>
+            <select name="preferred_language" class="form-control">
+              <option value="EN" {% if profile.preferred_language == 'EN' %}selected{% endif %}>English</option>
+              <option value="PL" {% if profile.preferred_language == 'PL' %}selected{% endif %}>Polski</option>
+              <option value="RU" {% if profile.preferred_language == 'RU' %}selected{% endif %}>Русский</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label class="form-label">Real name</label>
+            <input type="text" name="real_name" class="form-control"
+                   value="{{ user.real_name or '' }}" placeholder="Optional">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Discord ID</label>
+            <input type="text" name="discord_id" class="form-control"
+                   value="{{ user.discord_id or '' }}" placeholder="username#0000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Bio</label>
+          <textarea name="bio" class="form-control" maxlength="500"
+                    placeholder="Tell others about yourself...">{{ profile.bio or '' }}</textarea>
+          <span class="form-hint">Max 500 characters</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save changes</button>
+      </form>
+
+      <div class="divider"></div>
+
+      <!-- Удаление аккаунта -->
+      <div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:600;color:var(--red);margin-bottom:0.75rem;">
+          ⚠️ Delete account
+        </div>
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">
+          This will permanently delete your account and all associated data (GDPR compliance).
+        </p>
+        <button class="btn btn-danger btn-sm" onclick="document.getElementById('delete-modal').style.display='flex'">
+          Delete my account
+        </button>
+      </div>
+    </div>
+
+    <!-- Мои игры -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;">
+      <h3 style="font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:600;margin-bottom:1.25rem;">🎮 My Games</h3>
+
+      {% if user_games %}
+      <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.25rem;">
+        {% for ug in user_games %}
+        <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-md);padding:0.75rem 1rem;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;">{{ ug.game.name }}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">{{ ug.region }} · {{ ug.game_mode }}</div>
+          </div>
+          <form method="POST" style="margin:0;">
+            <input type="hidden" name="action" value="remove_game">
+            <input type="hidden" name="game_id" value="{{ ug.game_id }}">
+            <button type="submit" class="btn btn-danger btn-sm">✕</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Добавить игру -->
+      <form method="POST">
+        <input type="hidden" name="action" value="add_game">
+        <div class="form-group">
+          <label class="form-label">Add game</label>
+          <select name="game_id" class="form-control">
+            {% for game in all_games %}
+              {% if game.id not in user_game_ids %}
+              <option value="{{ game.id }}">{{ game.name }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+          <div class="form-group">
+            <label class="form-label">Region</label>
+            <select name="region" class="form-control">
+              <option value="EU_WEST">EU West</option>
+              <option value="EU_EAST">EU East</option>
+              <option value="NA">NA</option>
+              <option value="ASIA">Asia</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mode</label>
+            <select name="game_mode" class="form-control">
+              <option value="CASUAL">Casual</option>
+              <option value="RANKED">Ranked</option>
+              <option value="CUSTOM">Custom</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-secondary btn-block">+ Add game</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<!-- Модалка удаления -->
+<div id="delete-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--red);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:400px;margin:1rem;">
+    <h3 style="font-family:'Rajdhani',sans-serif;font-size:1.3rem;color:var(--red);margin-bottom:1rem;">⚠️ Delete account</h3>
+    <p style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:1.5rem;">
+      Enter your password to confirm. This action cannot be undone.
+    </p>
+    <form method="POST" action="{{ url_for('auth.delete_account') }}">
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" required placeholder="Your password">
+      </div>
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1rem;">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('delete-modal').style.display='none'">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete permanently</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewAvatar(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => document.getElementById('avatar-preview').src = e.target.result;
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+document.getElementById('delete-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+</script>
+{% endblock %}
