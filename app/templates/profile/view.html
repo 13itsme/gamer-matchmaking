@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container page-content">
 
-    <!-- Шапка профиля -->
+    <!-- Profile header -->
     <div class="profile-header">
         <div class="profile-avatar-wrap">
             <img src="{{ profile.avatar_url or '/static/uploads/avatars/default.png' }}"
@@ -50,7 +50,7 @@
                 {% endif %}
             </div>
 
-            <!-- Игры пользователя -->
+            <!-- User's games -->
             {% if user_games %}
             <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.75rem;">
                 {% for ug in user_games %}
@@ -64,7 +64,7 @@
             {% endif %}
         </div>
 
-        <!-- Кнопки действий -->
+        <!-- Actions buttons -->
         <div style="display:flex; flex-direction:column; gap:0.5rem; flex-shrink:0;">
             {% if current_user and current_user.id != user.id %}
             <button class="btn btn-primary btn-sm" onclick="openInviteModal({{ user.id }})">
@@ -83,7 +83,7 @@
         </div>
     </div>
 
-    <!-- Рейтинги -->
+    <!-- Ratings -->
     {% if trust_score and trust_score.is_visible() %}
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;">
         <h3 style="font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:600;margin-bottom:1rem;">⭐ Trust
@@ -111,9 +111,21 @@
     </div>
     {% endif %}
 
+    <!-- Comments -->
+    {% if trust_score and trust_score.total_ratings > 0 %}
+    <div style="margin-bottom:1.5rem;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;">
+      <h3 style="font-family:'Rajdhani',sans-serif;font-size:1.2rem;font-weight:600;margin-bottom:1rem;">💬 Player reviews</h3>
+      <div id="reviews-container">
+        <div style="color:var(--text-muted);font-size:0.875rem;">Loading reviews...</div>
+      </div>
+    </div>
+    </div>
+    {% endif %}
+
 </div>
 
-<!-- Модалка приглашения -->
+<!-- Invite modal -->
 {% if current_user and current_user.id != user.id %}
 <div id="invite-modal"
      style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:center; justify-content:center;">
@@ -144,7 +156,7 @@
     </div>
 </div>
 
-<!-- Модалка рейтинга -->
+<!-- Rating modal -->
 <div id="rating-modal"
      style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:center; justify-content:center;">
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:400px;margin:1rem;">
@@ -224,5 +236,39 @@
     document.getElementById('rating-modal')?.addEventListener('click', function(e) {
       if (e.target === this) closeRatingModal();
     });
+
+    async function loadReviews() {
+  const res = await fetch('/ratings/user/{{ user.id }}');
+  const data = await res.json();
+  const container = document.getElementById('reviews-container');
+
+  if (!data.ratings.length) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:0.875rem;">No reviews yet</div>';
+    return;
+  }
+
+  container.innerHTML = data.ratings.map(r => `
+    <div style="border-bottom:1px solid var(--border);padding:0.875rem 0;display:flex;gap:0.75rem;align-items:flex-start;">
+      <span style="font-size:1.1rem;">
+        ${r.stars === 3 ? '🟢' : r.stars === 2 ? '🟡' : '🔴'}
+      </span>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.25rem;">
+          <span style="font-weight:600;font-size:0.875rem;color:var(--text-primary);">${r.rater_nickname}</span>
+          <span style="font-size:0.75rem;color:var(--text-muted);">${new Date(r.created_at).toLocaleDateString()}</span>
+          <span style="font-size:0.75rem;padding:0.15rem 0.5rem;border-radius:100px;
+            ${r.stars === 3 ? 'background:rgba(76,175,125,0.15);color:var(--green);' :
+              r.stars === 2 ? 'background:rgba(232,164,74,0.15);color:var(--orange);' :
+                             'background:rgba(224,92,92,0.15);color:var(--red);'}">
+            ${r.stars_info.label}
+          </span>
+        </div>
+        ${r.comment ? `<div style="font-size:0.85rem;color:var(--text-secondary);">${r.comment}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+loadReviews();
 </script>
 {% endblock %}

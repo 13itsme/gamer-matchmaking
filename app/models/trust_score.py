@@ -24,7 +24,7 @@ class TrustScore(db.Model):
         nullable=False
     )
 
-    MIN_RATINGS_TO_SHOW = 5
+    MIN_RATINGS_TO_SHOW = 3
 
     user = db.relationship("User", back_populates="trust_score")
 
