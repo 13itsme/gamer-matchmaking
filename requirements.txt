@@ -1,14 +1,26 @@
+# GameMatch - Zależności Python
+# Instalacja: pip install -r requirements.txt
+
+# Core Flask
 Flask==3.0.3
-Flask-SQLAlchemy==3.1.1
+Flask-SQLAlchemy==3.1.1g
 Flask-Migrate==4.0.7
 Flask-Bcrypt==1.0.1
 Flask-SocketIO==5.3.6
-psycopg[binary]>=3.2
+Flask-WTF==1.2.1         # Ochrona CSRF
+
+# Baza danych
+psycopg[binary]>=3.2     # Sterownik PostgreSQL
 SQLAlchemy==2.0.31
+
+# WebSocket
 python-socketio==5.11.3
 python-engineio==4.9.1
-eventlet==0.36.1
-python-dotenv==1.0.1
-Werkzeug==3.0.3
-Jinja2==3.1.4
+eventlet==0.36.1         # Async backend dla SocketIO (alternatywa: gevent)
 
+# Zmienne środowiskowe
+python-dotenv==1.0.1
+
+# Narzędzia
+Werkzeug==3.0.3          # WSGI utilities (wbudowane w Flask, ale jawna wersja)
+Jinja2==3.1.4

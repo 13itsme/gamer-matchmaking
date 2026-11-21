@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFProtect
 
 from app.config import get_config
 
@@ -11,6 +12,7 @@ db = SQLAlchemy()
 socketio = SocketIO()
 bcrypt = Bcrypt()
 migrate = Migrate()
+csrf = CSRFProtect()
 
 
 def create_app():
@@ -22,6 +24,7 @@ def create_app():
 
     db.init_app(app)
     bcrypt.init_app(app)
+    csrf.init_app(app)
     migrate.init_app(app, db)
     socketio.init_app(
         app,

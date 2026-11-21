@@ -83,7 +83,7 @@ function handleTyping() {
 function appendMessage(msg) {
   const container = document.getElementById('chat-messages');
 
-  // Убрать empty state если есть
+  // Remove the empty state placeholder if present
   const emptyState = container.querySelector('.empty-state');
   if (emptyState) emptyState.remove();
 
@@ -94,10 +94,10 @@ function appendMessage(msg) {
   div.className = `chat-message ${isOwn ? 'chat-message--own' : ''}`;
   div.id = `msg-${msg.id}`;
   div.innerHTML = `
-    ${!isOwn ? `<img src="${msg.sender_avatar || '/static/uploads/avatars/default.png'}"
+    ${!isOwn ? `<img src="${msg.sender_avatar || '/static/images/default_avatar.svg'}"
          alt="avatar"
          style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;"
-         onerror="this.src='/static/uploads/avatars/default.png'">` : ''}
+         onerror="this.onerror=null;this.src='/static/images/default_avatar.svg'">` : ''}
     <div>
       <div class="chat-bubble">${escapeHtml(msg.content)}</div>
       <div class="chat-bubble__time">${time}</div>
@@ -113,8 +113,3 @@ function scrollToBottom() {
   }
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.appendChild(document.createTextNode(text));
-  return div.innerHTML;
-}

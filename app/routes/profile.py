@@ -110,7 +110,7 @@ def _update_profile(user, profile):
             if new_url:
                 delete_avatar(old_url)
                 profile.avatar_url = new_url
-                session["avatar_url"] = profile.avatar_url or "/static/uploads/avatars/default.png"
+                session["avatar_url"] = profile.avatar_url or "/static/images/default_avatar.svg"
             else:
                 errors.append("PNG, JPG, GIF, WebP formats only (max 2mb)")
 

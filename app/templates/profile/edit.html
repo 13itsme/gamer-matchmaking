@@ -13,14 +13,15 @@
     <!-- Основная форма -->
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;">
       <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="update_profile">
 
         <!-- Аватар -->
         <div style="display:flex; align-items:center; gap:1.5rem; margin-bottom:1.75rem;">
-          <img src="{{ profile.avatar_url or '/static/uploads/avatars/default.png' }}"
+          <img src="{{ profile.avatar_url or '/static/images/default_avatar.svg' }}"
                alt="avatar" id="avatar-preview"
                style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--accent-purple);"
-               onerror="this.src='/static/uploads/avatars/default.png'">
+               onerror="this.onerror=null;this.src='/static/images/default_avatar.svg'">
           <div>
             <label class="btn btn-secondary btn-sm" style="cursor:pointer;">
               📷 Change avatar
@@ -98,6 +99,7 @@
             <div style="font-size:0.75rem;color:var(--text-muted);">{{ ug.region }} · {{ ug.game_mode }}</div>
           </div>
           <form method="POST" style="margin:0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="action" value="remove_game">
             <input type="hidden" name="game_id" value="{{ ug.game_id }}">
             <button type="submit" class="btn btn-danger btn-sm">✕</button>
@@ -109,6 +111,7 @@
 
       <!-- Добавить игру -->
       <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="add_game">
         <div class="form-group">
           <label class="form-label">Add game</label>
@@ -154,6 +157,7 @@
       Enter your password to confirm. This action cannot be undone.
     </p>
     <form method="POST" action="{{ url_for('auth.delete_account') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <label class="form-label">Password</label>
         <input type="password" name="password" class="form-control" required placeholder="Your password">

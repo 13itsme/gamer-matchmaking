@@ -113,9 +113,9 @@ function renderPlayers(data) {
       <div class="player-card__header">
         <img src="${p.avatar_url}" alt="avatar"
              class="player-avatar ${p.is_online ? 'player-avatar--online' : ''}"
-             onerror="this.src='/static/uploads/avatars/default.png'">
+             onerror="this.onerror=null;this.src='/static/images/default_avatar.svg'">
         <div class="player-card__info">
-          <div class="player-card__nickname">${p.nickname}</div>
+          <div class="player-card__nickname">${escapeHtml(p.nickname)}</div>
           <div class="player-card__meta">
             ${p.is_online ? '<span class="online-dot"></span> Online' : 'Offline'}
             · ${p.preferred_language}
@@ -126,11 +126,11 @@ function renderPlayers(data) {
             ⭐ ${p.trust_score.average_stars}
           </span>` : ''}
       </div>
-      ${p.bio ? `<div class="player-card__bio">${p.bio}</div>` : ''}
+      ${p.bio ? `<div class="player-card__bio">${escapeHtml(p.bio)}</div>` : ''}
       <div class="player-card__tags">
         <span class="tag tag--purple">${p.region_label}</span>
         <span class="tag tag--blue">${p.game_mode_label}</span>
-        ${p.discord_id ? `<span class="tag">💬 ${p.discord_id}</span>` : ''}
+        ${p.discord_id ? `<span class="tag">💬 ${escapeHtml(p.discord_id)}</span>` : ''}
       </div>
       <div class="player-card__actions">
         <a href="/profile/${p.nickname}" class="btn btn-ghost btn-sm" style="flex:1;">View profile</a>
@@ -160,7 +160,7 @@ async function sendInvite(event, receiverId, gameId) {
 
   const res = await fetch('/invitations/send', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken() },
     body: `receiver_id=${receiverId}&game_id=${gameId}`,
   });
   const data = await res.json();

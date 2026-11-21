@@ -8,6 +8,7 @@
     <div class="auth-card__subtitle">Join GameMatch and find your perfect teammate</div>
 
     <form method="POST" action="{{ url_for('auth.register') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
         <div class="form-group">

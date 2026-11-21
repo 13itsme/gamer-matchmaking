@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}GameMatch{% endblock %} — GameMatch</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -35,9 +36,9 @@
         {% if session.user_id %}
         <a href="{{ url_for('profile.me') }}"
            style="display:flex;align-items:center;gap:0.5rem;color:var(--text-secondary);">
-            <img src="{{ session.get('avatar_url', '/static/uploads/avatars/default.png') }}"
+            <img src="{{ session.get('avatar_url', '/static/images/default_avatar.svg') }}"
                  alt="avatar" class="navbar__avatar"
-                 onerror="this.src='/static/uploads/avatars/default.png'">
+                 onerror="this.onerror=null;this.src='/static/images/default_avatar.svg'">
             <span class="navbar__username">{{ session.get('nickname', '') }}</span>
         </a>
         <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">Logout</a>

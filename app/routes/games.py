@@ -107,7 +107,7 @@ def api_players():
         player_data = {
             "user_id": ug.user_id,
             "nickname": ug.user.profile.nickname,
-            "avatar_url": ug.user.profile.avatar_url or "/static/uploads/avatars/default.png",
+            "avatar_url": ug.user.profile.avatar_url or "/static/images/default_avatar.svg",
             "bio": ug.user.profile.bio,
             "is_online": ug.user.profile.is_online,
             "preferred_language": ug.user.profile.preferred_language,

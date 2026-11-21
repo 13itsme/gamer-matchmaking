@@ -31,7 +31,7 @@ class Profile(db.Model):
             "id": self.id,
             "user_id": self.user_id,
             "nickname": self.nickname,
-            "avatar_url": self.avatar_url or "/static/uploads/avatars/default.png",
+            "avatar_url": self.avatar_url or "/static/images/default_avatar.svg",
             "bio": self.bio,
             "preferred_language": self.preferred_language,
             "is_online": self.is_online

@@ -1,3 +1,13 @@
+function csrfToken() {
+  return document.querySelector('meta[name="csrf-token"]').content;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(text == null ? '' : String(text)));
+  return div.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const flashes = document.querySelectorAll('.flash');
   flashes.forEach(flash => {

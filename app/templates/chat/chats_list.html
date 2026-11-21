@@ -17,10 +17,10 @@
       {% endif %}
     <a href="{{ url_for('chat.chat_view', partner_id=partner.id) }}"
        style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;display:flex;align-items:center;gap:1rem;transition:all 0.2s;text-decoration:none;color:var(--text-primary);">
-      <img src="{{ partner.profile.avatar_url or '/static/uploads/avatars/default.png' }}"
+      <img src="{{ partner.profile.avatar_url or '/static/images/default_avatar.svg' }}"
            alt="avatar"
            style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid {% if partner.profile.is_online %}var(--green){% else %}var(--border){% endif %};"
-           onerror="this.src='/static/uploads/avatars/default.png'">
+           onerror="this.onerror=null;this.src='/static/images/default_avatar.svg'">
       <div style="flex:1;">
         <div style="font-weight:600;font-size:0.95rem;">{{ partner.profile.nickname }}</div>
         <div style="font-size:0.78rem;color:var(--text-muted);">
