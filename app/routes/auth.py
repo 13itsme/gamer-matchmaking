@@ -4,7 +4,7 @@ from app.models.user import User
 from app.models.profile import Profile
 from app.models.trust_score import TrustScore
 from app.utils.decorators import guest_only, login_required
-from app.utils.helpers import validate_age, sanitize_nickname
+from app.utils.helpers import validate_age, sanitize_nickname, is_safe_redirect_target
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -120,6 +120,8 @@ def login():
 
     flash(f"Hello {session['nickname']}!", "success")
     next_page = request.args.get("next")
+    if not is_safe_redirect_target(next_page):
+        next_page = None
     return redirect(next_page or url_for("games.index"))
 
 

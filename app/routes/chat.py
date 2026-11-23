@@ -29,7 +29,7 @@ def chat_view(partner_id):
         Message.query.filter(
             ((Message.sender_id == current_user.id) & (Message.receiver_id == partner.id)) |
             ((Message.sender_id == partner_id) & (Message.receiver_id == current_user.id))
-        ).order_by(Message.created_at.asc()).limit(100).all()
+        ).order_by(Message.created_at.asc(), Message.id.asc()).limit(100).all()
     )
 
     Message.query.filter_by(
@@ -65,7 +65,7 @@ def api_history(partner_id):
     if before_id:
         query = query.filter(Message.id < before_id)
 
-    messages = query.order_by(Message.created_at.desc()).limit(limit).all()
+    messages = query.order_by(Message.created_at.desc(), Message.id.desc()).limit(limit).all()
     messages.reverse()
 
     return jsonify({

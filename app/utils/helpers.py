@@ -51,6 +51,17 @@ def sanitize_nickname(nickname):
         return None
     return nickname
 
+def is_safe_redirect_target(target):
+    """Zezwala tylko na przekierowania w obrebie tej samej domeny (ochrona przed open redirect)."""
+    from urllib.parse import urlparse, urljoin
+    from flask import request
+    if not target or "\\" in target:
+        return False
+    ref = urlparse(request.host_url)
+    test = urlparse(urljoin(request.host_url, target))
+    return test.scheme in ("http", "https") and ref.netloc == test.netloc
+
+
 def get_chat_room_id(user_id_1, user_id_2):
     ids = sorted([user_id_1, user_id_2])
     return f"chat_{ids[0]}_{ids[1]}"

@@ -55,4 +55,20 @@ The site runs at http://localhost:5000.
       static/      CSS, JavaScript, images
       utils/       decorators and helpers
     migrations/    Alembic migrations
+    tests/         automated tests (pytest)
     main.py        entry point
+
+## Tests
+
+Install the development dependencies and run the suite (SQLite in memory by default):
+
+    pip install -r requirements-dev.txt
+    pytest
+
+To run the same tests on PostgreSQL, point `TEST_DATABASE_URL` at an empty test database.
+The database is wiped before every test, so never use a production database:
+
+    $env:TEST_DATABASE_URL = "postgresql+psycopg://user:password@localhost:5432/gm_test"
+    pytest
+
+`tests/perf_measure.py` seeds 1000 accounts and prints median and p95 response times.
